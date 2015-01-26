@@ -51,28 +51,28 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                     {
                         "@{<!}",
                         buildPartialStatementBlock(
-                            () => new MarkupBlock(blockFactory.EscapedMarkupTagBlock("<!}"))),
+                            () => new MarkupBlock(blockFactory.EscapedMarkupTagBlock("<", "}"))),
                         new []
                         {
                             new RazorError(
                                 errorMatchingBrace,
                                 absoluteIndex: 1, lineIndex: 0, columnIndex: 1),
                             new RazorError(
-                                string.Format(errorEOFMatchingBrace, "}"),
+                                string.Format(errorEOFMatchingBrace, "!}"),
                                 absoluteIndex: 2, lineIndex: 0, columnIndex: 2)
                         }
                     },
                     {
                         "@{<!p}",
                         buildPartialStatementBlock(
-                            () => new MarkupBlock(blockFactory.EscapedMarkupTagBlock("<!p}"))),
+                            () => new MarkupBlock(blockFactory.EscapedMarkupTagBlock("<", "p}"))),
                         new []
                         {
                             new RazorError(
                                 errorMatchingBrace,
                                 absoluteIndex: 1, lineIndex: 0, columnIndex: 1),
                             new RazorError(
-                                string.Format(errorEOFMatchingBrace, "p}"),
+                                string.Format(errorEOFMatchingBrace, "!p}"),
                                 absoluteIndex: 2, lineIndex: 0, columnIndex: 2)
                         }
                     },
@@ -81,7 +81,9 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         buildPartialStatementBlock(
                             () => new MarkupBlock(
                                 new MarkupTagBlock(
-                                    factory.EscapedMarkup("<!p"),
+                                    factory.Markup("<"),
+                                    factory.BangEscape(),
+                                    factory.Markup("p"),
                                     new MarkupBlock(
                                         new AttributeBlockCodeGenerator(
                                             name: "class",
@@ -98,7 +100,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                 errorMatchingBrace,
                                 absoluteIndex: 1, lineIndex: 0, columnIndex: 1),
                             new RazorError(
-                                string.Format(errorEOFMatchingBrace, "p"),
+                                string.Format(errorEOFMatchingBrace, "!p"),
                                 absoluteIndex: 2, lineIndex: 0, columnIndex: 2)
                         }
                     },
@@ -107,7 +109,9 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         buildPartialStatementBlock(
                             () => new MarkupBlock(
                                 new MarkupTagBlock(
-                                    factory.EscapedMarkup("<!p"),
+                                    factory.Markup("<"),
+                                    factory.BangEscape(),
+                                    factory.Markup("p"),
                                     new MarkupBlock(
                                         new AttributeBlockCodeGenerator(
                                             name: "class",
@@ -124,7 +128,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                     errorMatchingBrace,
                                     absoluteIndex: 1, lineIndex: 0, columnIndex: 1),
                                 new RazorError(
-                                    string.Format(errorEOFMatchingBrace, "p"),
+                                    string.Format(errorEOFMatchingBrace, "!p"),
                                     absoluteIndex: 2, lineIndex: 0, columnIndex: 2)
                             }
                     },
@@ -133,7 +137,10 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         buildPartialStatementBlock(
                             () => new MarkupBlock(
                                 new MarkupTagBlock(
-                                    factory.EscapedMarkup("<!p"),
+                                    factory.Markup("<"),
+                                    factory.BangEscape(),
+                                    factory.Markup("p"),
+
                                     new MarkupBlock(
                                         new AttributeBlockCodeGenerator(
                                             name: "class",
@@ -152,7 +159,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                         errorMatchingBrace,
                                         absoluteIndex: 1, lineIndex: 0, columnIndex: 1),
                                     new RazorError(
-                                        string.Format(errorEOFMatchingBrace, "p"),
+                                        string.Format(errorEOFMatchingBrace, "!p"),
                                         absoluteIndex: 2, lineIndex: 0, columnIndex: 2)
                                 }
                     }
@@ -182,17 +189,19 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                 {
                     {
                         "<!",
-                        new MarkupBlock(blockFactory.EscapedMarkupTagBlock("<!"))
+                        new MarkupBlock(factory.Markup("<!"))
                     },
                     {
                         "<!p",
-                        new MarkupBlock(blockFactory.EscapedMarkupTagBlock("<!p"))
+                        new MarkupBlock(blockFactory.EscapedMarkupTagBlock("<", "p"))
                     },
                     {
                         "<!p class=",
                         new MarkupBlock(
                             new MarkupTagBlock(
-                                factory.EscapedMarkup("<!p"),
+                                factory.Markup("<"),
+                                factory.BangEscape(),
+                                factory.Markup("p"),
                                 new MarkupBlock(
                                     new AttributeBlockCodeGenerator(
                                         name: "class",
@@ -204,7 +213,9 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         "<!p class=\"btn",
                         new MarkupBlock(
                             new MarkupTagBlock(
-                                factory.EscapedMarkup("<!p"),
+                                factory.Markup("<"),
+                                factory.BangEscape(),
+                                factory.Markup("p"),
                                 new MarkupBlock(
                                     new AttributeBlockCodeGenerator(
                                         name: "class",
@@ -220,7 +231,9 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         "<!p class=\"btn\"",
                         new MarkupBlock(
                             new MarkupTagBlock(
-                                factory.EscapedMarkup("<!p"),
+                                factory.Markup("<"),
+                                factory.BangEscape(),
+                                factory.Markup("p"),
                                 new MarkupBlock(
                                     new AttributeBlockCodeGenerator(
                                         name: "class",
@@ -252,7 +265,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
             {
                 var factory = CreateDefaultSpanFactory();
                 var blockFactory = new BlockFactory(factory);
-                var errorFormatUnclosed =
+                var errorFormatMalformed =
                     "Found a malformed '{0}' tag helper. Tag helpers must have a start and end tag or be self " +
                     "closing.";
                 var errorFormatNormalUnclosed =
@@ -286,20 +299,23 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         "@{<!p></!p>}",
                         buildStatementBlock(
                             () => new MarkupBlock(
-                                blockFactory.EscapedMarkupTagBlock("<!p>", AcceptedCharacters.None),
-                                blockFactory.EscapedMarkupTagBlock("</!p>", AcceptedCharacters.None))),
+                                blockFactory.EscapedMarkupTagBlock("<", "p>", AcceptedCharacters.None),
+                                blockFactory.EscapedMarkupTagBlock("</", "p>", AcceptedCharacters.None))),
                         new RazorError[0]
                     },
                     {
                         "@{<!p></p>}",
                         buildStatementBlock(
                             () => new MarkupBlock(
-                                blockFactory.EscapedMarkupTagBlock("<!p>", AcceptedCharacters.None),
+                                blockFactory.EscapedMarkupTagBlock("<", "p>", AcceptedCharacters.None),
                                 blockFactory.MarkupTagBlock("</p>", AcceptedCharacters.None))),
                         new []
                         {
                             new RazorError(
-                                string.Format(errorFormatUnclosed, "p", CultureInfo.InvariantCulture),
+                                string.Format(errorFormatNormalUnclosed, "!p", CultureInfo.InvariantCulture),
+                                absoluteIndex: 2, lineIndex: 0, columnIndex: 2),
+                            new RazorError(
+                                string.Format(errorFormatMalformed, "p", CultureInfo.InvariantCulture),
                                 absoluteIndex: 6, lineIndex: 0, columnIndex: 6)
                         }
                     },
@@ -308,11 +324,14 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         buildStatementBlock(
                             () => new MarkupBlock(
                                 new MarkupTagHelperBlock("p",
-                                    blockFactory.EscapedMarkupTagBlock("</!p>", AcceptedCharacters.None)))),
+                                    blockFactory.EscapedMarkupTagBlock("</", "p>", AcceptedCharacters.None)))),
                         new []
                         {
                             new RazorError(
-                                string.Format(errorFormatUnclosed, "p", CultureInfo.InvariantCulture),
+                                string.Format(errorFormatNormalUnclosed, "p", CultureInfo.InvariantCulture),
+                                absoluteIndex: 2, lineIndex: 0, columnIndex: 2),
+                            new RazorError(
+                                string.Format(errorFormatMalformed, "p", CultureInfo.InvariantCulture),
                                 absoluteIndex: 2, lineIndex: 0, columnIndex: 2)
                         }
                     },
@@ -321,8 +340,8 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         buildStatementBlock(
                             () => new MarkupBlock(
                                 new MarkupTagHelperBlock("p",
-                                    blockFactory.EscapedMarkupTagBlock("<!p>", AcceptedCharacters.None),
-                                    blockFactory.EscapedMarkupTagBlock("</!p>", AcceptedCharacters.None)))),
+                                    blockFactory.EscapedMarkupTagBlock("<", "p>", AcceptedCharacters.None),
+                                    blockFactory.EscapedMarkupTagBlock("</", "p>", AcceptedCharacters.None)))),
                         new RazorError[0]
                     },
                     {
@@ -334,8 +353,8 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                 factory.MetaCode("{").Accepts(AcceptedCharacters.None),
                                 new MarkupBlock(
                                     new MarkupTagHelperBlock("p",
-                                        blockFactory.EscapedMarkupTagBlock("<!p>", AcceptedCharacters.None),
-                                        blockFactory.EscapedMarkupTagBlock("</!p>", AcceptedCharacters.None),
+                                        blockFactory.EscapedMarkupTagBlock("<", "p>", AcceptedCharacters.None),
+                                        blockFactory.EscapedMarkupTagBlock("</", "p>", AcceptedCharacters.None),
                                         factory.Markup("}"))))),
                         new []
                         {
@@ -346,7 +365,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                 string.Format(errorFormatNormalUnclosed, "p", CultureInfo.InvariantCulture),
                                 absoluteIndex: 2, lineIndex: 0, columnIndex: 2),
                             new RazorError(
-                                string.Format(errorFormatUnclosed, "p", CultureInfo.InvariantCulture),
+                                string.Format(errorFormatMalformed, "p", CultureInfo.InvariantCulture),
                                 absoluteIndex: 2, lineIndex: 0, columnIndex: 2)
                         }
                     },
@@ -358,8 +377,8 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                 factory.CodeTransition(),
                                 factory.MetaCode("{").Accepts(AcceptedCharacters.None),
                                 new MarkupBlock(
-                                    blockFactory.EscapedMarkupTagBlock("<!p>", AcceptedCharacters.None),
-                                    blockFactory.EscapedMarkupTagBlock("</!p>", AcceptedCharacters.None)),
+                                    blockFactory.EscapedMarkupTagBlock("<", "p>", AcceptedCharacters.None),
+                                    blockFactory.EscapedMarkupTagBlock("</", "p>", AcceptedCharacters.None)),
                                 new MarkupBlock(
                                     blockFactory.MarkupTagBlock("</p>", AcceptedCharacters.None)),
                                 factory.EmptyCSharp().AsStatement(),
@@ -371,7 +390,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                 string.Format(errorFormatNormalNotStarted, "p", CultureInfo.InvariantCulture),
                                 absoluteIndex: 11, lineIndex: 0, columnIndex: 11),
                             new RazorError(
-                                string.Format(errorFormatUnclosed, "p", CultureInfo.InvariantCulture),
+                                string.Format(errorFormatMalformed, "p", CultureInfo.InvariantCulture),
                                 absoluteIndex: 11, lineIndex: 0, columnIndex: 11)
                         }
                     },
@@ -384,7 +403,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                             factory.MetaCode("{").Accepts(AcceptedCharacters.None),
                             new MarkupBlock(
                                 new MarkupTagHelperBlock("strong",
-                                    blockFactory.EscapedMarkupTagBlock("</!p>", AcceptedCharacters.None))),
+                                    blockFactory.EscapedMarkupTagBlock("</", "p>", AcceptedCharacters.None))),
                             new MarkupBlock(
                                 blockFactory.MarkupTagBlock("</strong>", AcceptedCharacters.None)),
                             factory.EmptyCSharp().AsStatement(),
@@ -396,13 +415,13 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                 string.Format(errorFormatNormalUnclosed, "strong", CultureInfo.InvariantCulture),
                                 absoluteIndex: 2, lineIndex: 0, columnIndex: 2),
                             new RazorError(
-                                string.Format(errorFormatUnclosed, "strong", CultureInfo.InvariantCulture),
+                                string.Format(errorFormatMalformed, "strong", CultureInfo.InvariantCulture),
                                 absoluteIndex: 2, lineIndex: 0, columnIndex: 2),
                             new RazorError(
                                 string.Format(errorFormatNormalNotStarted, "strong", CultureInfo.InvariantCulture),
                                 absoluteIndex: 15, lineIndex: 0, columnIndex: 15),
                             new RazorError(
-                                string.Format(errorFormatUnclosed, "strong", CultureInfo.InvariantCulture),
+                                string.Format(errorFormatMalformed, "strong", CultureInfo.InvariantCulture),
                                 absoluteIndex: 15, lineIndex: 0, columnIndex: 15)
                         }
                     },
@@ -416,8 +435,8 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                 new MarkupBlock(
                                     new MarkupTagHelperBlock("strong")),
                                 new MarkupBlock(
-                                    blockFactory.EscapedMarkupTagBlock("<!p>", AcceptedCharacters.None),
-                                    blockFactory.EscapedMarkupTagBlock("</!p>", AcceptedCharacters.None)),
+                                    blockFactory.EscapedMarkupTagBlock("<", "p>", AcceptedCharacters.None),
+                                    blockFactory.EscapedMarkupTagBlock("</", "p>", AcceptedCharacters.None)),
                                 factory.EmptyCSharp().AsStatement(),
                                 factory.MetaCode("}").Accepts(AcceptedCharacters.None)),
                             factory.EmptyHtml()),
@@ -433,10 +452,12 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                     new MarkupBlock(
                                         new MarkupTagHelperBlock("p",
                                             new MarkupTagHelperBlock("strong",
-                                                blockFactory.EscapedMarkupTagBlock("</!strong>", AcceptedCharacters.None),
-                                                blockFactory.EscapedMarkupTagBlock("<!p>", AcceptedCharacters.None)))),
+                                                blockFactory.EscapedMarkupTagBlock("</", "strong>", AcceptedCharacters.None)))),
                                     new MarkupBlock(
-                                        blockFactory.EscapedMarkupTagBlock("</!p>", AcceptedCharacters.None)),
+                                        blockFactory.EscapedMarkupTagBlock("<", "p>", AcceptedCharacters.None),
+                                        blockFactory.MarkupTagBlock("</strong>", AcceptedCharacters.None)),
+                                    new MarkupBlock(
+                                        blockFactory.EscapedMarkupTagBlock("</", "p>", AcceptedCharacters.None)),
                                     factory.EmptyCSharp().AsStatement(),
                                     factory.MetaCode("}").Accepts(AcceptedCharacters.None)),
                                 factory.EmptyHtml()),
@@ -446,10 +467,19 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                 string.Format(errorFormatNormalUnclosed, "p", CultureInfo.InvariantCulture),
                                 absoluteIndex: 2, lineIndex: 0, columnIndex: 2),
                             new RazorError(
-                                string.Format(errorFormatUnclosed, "p", CultureInfo.InvariantCulture),
+                                string.Format(errorFormatMalformed, "p", CultureInfo.InvariantCulture),
                                 absoluteIndex: 2, lineIndex: 0, columnIndex: 2),
                             new RazorError(
-                                string.Format(errorFormatNormalNotStarted, "p", CultureInfo.InvariantCulture),
+                                string.Format(errorFormatMalformed, "strong", CultureInfo.InvariantCulture),
+                                absoluteIndex: 5, lineIndex: 0, columnIndex: 5),
+                            new RazorError(
+                                string.Format(errorFormatNormalUnclosed, "!p", CultureInfo.InvariantCulture),
+                                absoluteIndex: 23, lineIndex: 0, columnIndex: 23),
+                            new RazorError(
+                                string.Format(errorFormatMalformed, "strong", CultureInfo.InvariantCulture),
+                                absoluteIndex: 27, lineIndex: 0, columnIndex: 27),
+                            new RazorError(
+                                string.Format(errorFormatNormalNotStarted, "!p", CultureInfo.InvariantCulture),
                                 absoluteIndex: 36, lineIndex: 0, columnIndex: 36),
                         }
                     },
@@ -485,7 +515,9 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         buildStatementBlock(
                             () => new MarkupBlock(
                                 new MarkupTagBlock(
-                                    factory.EscapedMarkup("<!p"),
+                                    factory.Markup("<"),
+                                    factory.BangEscape(),
+                                    factory.Markup("p"),
                                     new MarkupBlock(
                                         new AttributeBlockCodeGenerator(
                                             name: "class",
@@ -498,7 +530,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                                 value: new LocationTagged<string>("btn", 13, 0, 13))),
                                         factory.Markup("\"").With(SpanCodeGenerator.Null)),
                                     factory.Markup(">").Accepts(AcceptedCharacters.None)),
-                                blockFactory.EscapedMarkupTagBlock("</!p>", AcceptedCharacters.None))),
+                                blockFactory.EscapedMarkupTagBlock("</", "p>", AcceptedCharacters.None))),
                         new RazorError[0]
                     },
                     {
@@ -506,7 +538,9 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         buildStatementBlock(
                             () => new MarkupBlock(
                                 new MarkupTagBlock(
-                                    factory.EscapedMarkup("<!p"),
+                                    factory.Markup("<"),
+                                    factory.BangEscape(),
+                                    factory.Markup("p"),
                                     new MarkupBlock(
                                         new AttributeBlockCodeGenerator(
                                             name: "class",
@@ -533,7 +567,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                                     prefix: new LocationTagged<string>(string.Empty, 31, 0, 31),
                                                     value: new LocationTagged<string>("btn", 31, 0, 31)))),
                                     factory.Markup(">").Accepts(AcceptedCharacters.None)),
-                                blockFactory.EscapedMarkupTagBlock("</!p>", AcceptedCharacters.None))),
+                                blockFactory.EscapedMarkupTagBlock("</", "p>", AcceptedCharacters.None))),
                         new RazorError[0]
                     },
                     {
@@ -541,7 +575,9 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         buildStatementBlock(
                             () => new MarkupBlock(
                                 new MarkupTagBlock(
-                                    factory.EscapedMarkup("<!p"),
+                                    factory.Markup("<"),
+                                    factory.BangEscape(),
+                                    factory.Markup("p"),
                                     new MarkupBlock(
                                         new AttributeBlockCodeGenerator(
                                             name: "class",
@@ -567,7 +603,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                                 value: new LocationTagged<string>("btn2", 32, 0, 32))),
                                         factory.Markup("'").With(SpanCodeGenerator.Null)),
                                     factory.Markup(">").Accepts(AcceptedCharacters.None)),
-                                blockFactory.EscapedMarkupTagBlock("</!p>", AcceptedCharacters.None))),
+                                blockFactory.EscapedMarkupTagBlock("</", "p>", AcceptedCharacters.None))),
                         new RazorError[0]
                     },
                 };
@@ -600,14 +636,14 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                     {
                         "<!p></!p>",
                         new MarkupBlock(
-                            blockFactory.EscapedMarkupTagBlock("<!p>"),
-                            blockFactory.EscapedMarkupTagBlock("</!p>")),
+                            blockFactory.EscapedMarkupTagBlock("<", "p>"),
+                            blockFactory.EscapedMarkupTagBlock("</", "p>")),
                         new RazorError[0]
                     },
                     {
                         "<!p></p>",
                         new MarkupBlock(
-                            blockFactory.EscapedMarkupTagBlock("<!p>"),
+                            blockFactory.EscapedMarkupTagBlock("<", "p>"),
                             blockFactory.MarkupTagBlock("</p>")),
                         new []
                         {
@@ -619,7 +655,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                     {
                         "<p></!p>",
                         new MarkupBlock(
-                            new MarkupTagHelperBlock("p", blockFactory.EscapedMarkupTagBlock("</!p>"))),
+                            new MarkupTagHelperBlock("p", blockFactory.EscapedMarkupTagBlock("</", "p>"))),
                         new []
                         {
                             new RazorError(string.Format(errorFormatUnclosed, "p", CultureInfo.InvariantCulture),
@@ -630,16 +666,16 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         "<p><!p></!p></p>",
                         new MarkupBlock(
                             new MarkupTagHelperBlock("p",
-                                blockFactory.EscapedMarkupTagBlock("<!p>"),
-                                blockFactory.EscapedMarkupTagBlock("</!p>"))),
+                                blockFactory.EscapedMarkupTagBlock("<", "p>"),
+                                blockFactory.EscapedMarkupTagBlock("</", "p>"))),
                         new RazorError[0]
                     },
                     {
                         "<p><!p></!p>",
                         new MarkupBlock(
                             new MarkupTagHelperBlock("p",
-                                blockFactory.EscapedMarkupTagBlock("<!p>"),
-                                blockFactory.EscapedMarkupTagBlock("</!p>"))),
+                                blockFactory.EscapedMarkupTagBlock("<", "p>"),
+                                blockFactory.EscapedMarkupTagBlock("</", "p>"))),
                         new []
                         {
                             new RazorError(string.Format(errorFormatUnclosed, "p", CultureInfo.InvariantCulture),
@@ -649,8 +685,8 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                     {
                         "<!p></!p></p>",
                         new MarkupBlock(
-                            blockFactory.EscapedMarkupTagBlock("<!p>"),
-                            blockFactory.EscapedMarkupTagBlock("</!p>"),
+                            blockFactory.EscapedMarkupTagBlock("<", "p>"),
+                            blockFactory.EscapedMarkupTagBlock("</", "p>"),
                             blockFactory.MarkupTagBlock("</p>")),
                         new []
                         {
@@ -662,15 +698,15 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         "<strong></!p></strong>",
                         new MarkupBlock(
                             new MarkupTagHelperBlock("strong",
-                                blockFactory.EscapedMarkupTagBlock("</!p>"))),
+                                blockFactory.EscapedMarkupTagBlock("</", "p>"))),
                         new RazorError[0]
                     },
                     {
                         "<strong></strong><!p></!p>",
                         new MarkupBlock(
                             new MarkupTagHelperBlock("strong"),
-                            blockFactory.EscapedMarkupTagBlock("<!p>"),
-                            blockFactory.EscapedMarkupTagBlock("</!p>")),
+                            blockFactory.EscapedMarkupTagBlock("<", "p>"),
+                            blockFactory.EscapedMarkupTagBlock("</", "p>")),
                         new RazorError[0]
                     },
                     {
@@ -678,9 +714,9 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         new MarkupBlock(
                             new MarkupTagHelperBlock("p",
                                 new MarkupTagHelperBlock("strong",
-                                    blockFactory.EscapedMarkupTagBlock("</!strong>"),
-                                    blockFactory.EscapedMarkupTagBlock("<!p>")),
-                                blockFactory.EscapedMarkupTagBlock("</!p>"))),
+                                    blockFactory.EscapedMarkupTagBlock("</", "strong>"),
+                                    blockFactory.EscapedMarkupTagBlock("<", "p>")),
+                                blockFactory.EscapedMarkupTagBlock("</", "p>"))),
                         new []
                         {
                             new RazorError(string.Format(errorFormatUnclosed, "p", CultureInfo.InvariantCulture),
@@ -705,7 +741,9 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                         "<!p class=\"btn\"></!p>",
                         new MarkupBlock(
                             new MarkupTagBlock(
-                                factory.EscapedMarkup("<!p"),
+                                factory.Markup("<"),
+                                factory.BangEscape(),
+                                factory.Markup("p"),
                                 new MarkupBlock(
                                     new AttributeBlockCodeGenerator(
                                         name: "class",
@@ -718,14 +756,16 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                             value: new LocationTagged<string>("btn", 11, 0, 11))),
                                     factory.Markup("\"").With(SpanCodeGenerator.Null)),
                                 factory.Markup(">")),
-                            blockFactory.EscapedMarkupTagBlock("</!p>")),
+                            blockFactory.EscapedMarkupTagBlock("</", "p>")),
                         new RazorError[0]
                     },
                     {
                         "<!p class='btn1 btn2' class2=btn></!p>",
                         new MarkupBlock(
                             new MarkupTagBlock(
-                                factory.EscapedMarkup("<!p"),
+                                factory.Markup("<"),
+                                factory.BangEscape(),
+                                factory.Markup("p"),
                                 new MarkupBlock(
                                     new AttributeBlockCodeGenerator(
                                         name: "class",
@@ -752,14 +792,16 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                                 prefix: new LocationTagged<string>(string.Empty, 29, 0, 29),
                                                 value: new LocationTagged<string>("btn", 29, 0, 29)))),
                                 factory.Markup(">")),
-                            blockFactory.EscapedMarkupTagBlock("</!p>")),
+                            blockFactory.EscapedMarkupTagBlock("</", "p>")),
                         new RazorError[0]
                     },
                     {
                         "<!p class='btn1 @DateTime.Now btn2'></!p>",
                         new MarkupBlock(
                             new MarkupTagBlock(
-                                factory.EscapedMarkup("<!p"),
+                                factory.Markup("<"),
+                                factory.BangEscape(),
+                                factory.Markup("p"),
                                 new MarkupBlock(
                                     new AttributeBlockCodeGenerator(
                                         name: "class",
@@ -785,7 +827,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                             value: new LocationTagged<string>("btn2", 30, 0, 30))),
                                     factory.Markup("'").With(SpanCodeGenerator.Null)),
                                 factory.Markup(">")),
-                            blockFactory.EscapedMarkupTagBlock("</!p>")),
+                            blockFactory.EscapedMarkupTagBlock("</", "p>")),
                         new RazorError[0]
                     },
                 };

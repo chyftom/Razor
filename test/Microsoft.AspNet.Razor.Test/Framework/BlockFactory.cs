@@ -14,14 +14,17 @@ namespace Microsoft.AspNet.Razor.Test.Framework
             _factory = factory;
         }
 
-        public Block EscapedMarkupTagBlock(string content)
+        public Block EscapedMarkupTagBlock(string prefix, string suffix)
         {
-            return EscapedMarkupTagBlock(content, AcceptedCharacters.Any);
+            return EscapedMarkupTagBlock(prefix, suffix, AcceptedCharacters.Any);
         }
 
-        public Block EscapedMarkupTagBlock(string content, AcceptedCharacters acceptedCharacters)
+        public Block EscapedMarkupTagBlock(string prefix, string suffix, AcceptedCharacters acceptedCharacters)
         {
-            return new MarkupTagBlock(_factory.EscapedMarkup(content).Accepts(acceptedCharacters));
+            return new MarkupTagBlock(
+                _factory.Markup(prefix),
+                _factory.BangEscape(),
+                _factory.Markup(suffix).Accepts(acceptedCharacters));
         }
 
         public Block MarkupTagBlock(string content)

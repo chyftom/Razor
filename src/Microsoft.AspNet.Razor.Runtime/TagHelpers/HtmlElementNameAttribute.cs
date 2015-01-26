@@ -13,6 +13,8 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
     public sealed class HtmlElementNameAttribute : Attribute
     {
+        private IEnumerable<string> _tags;
+
         /// <summary>
         /// Instantiates a new instance of the <see cref="HtmlElementNameAttribute"/> class.
         /// </summary>
@@ -45,6 +47,29 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// <summary>
         /// An <see cref="IEnumerable{string}"/> of tag names for the <see cref="TagHelper"/> to target.
         /// </summary>
-        public IEnumerable<string> Tags { get; private set; }
+        public IEnumerable<string> Tags
+        {
+            get
+            {
+                return _tags;
+            }
+            private set
+            {
+                foreach (var tagName in value)
+                {
+                    ValidateTagName(tagName);
+                }
+
+                _tags = value;
+            }
+        }
+
+        private static void ValidateTagName(string tagName)
+        {
+            if (string.Equals(tagName, "!", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException(Resources.FormatHtmlElementNameAttribute_InvalidElementName("!"));
+            }
+        }
     }
 }

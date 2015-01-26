@@ -133,7 +133,9 @@ namespace Microsoft.AspNet.Razor.Parser
                 IDisposable tagBlockWrapper = null;
                 try
                 {
-                    if (!EndOfFile && !AtSpecialTag)
+                    var atSpecialTag = AtSpecialTag;
+
+                    if (!EndOfFile && !atSpecialTag)
                     {
                         // Start a Block tag.  This is used to wrap things like <p> or <a class="btn"> etc.
                         tagBlockWrapper = Context.StartBlock(BlockType.Tag);
@@ -157,7 +159,7 @@ namespace Microsoft.AspNet.Razor.Parser
                         }
                         else
                         {
-                            complete = AfterTagStart(tagStart, tags, tagBlockWrapper);
+                            complete = AfterTagStart(tagStart, tags, atSpecialTag, tagBlockWrapper);
                         }
                     }
 
@@ -187,6 +189,7 @@ namespace Microsoft.AspNet.Razor.Parser
 
         private bool AfterTagStart(SourceLocation tagStart,
                                    Stack<Tuple<HtmlSymbol, SourceLocation>> tags,
+                                   bool atSpecialTag,
                                    IDisposable tagBlockWrapper)
         {
             if (!EndOfFile)
@@ -197,26 +200,16 @@ namespace Microsoft.AspNet.Razor.Parser
                         // End Tag
                         return EndTag(tagStart, tags, tagBlockWrapper);
                     case HtmlSymbolType.Bang:
-                        var nextSymbol = Lookahead();
-
-                        // If the next symbol is a text symbol and is not DOCTYPE then it's an ordinary HTML tag.
-                        if (nextSymbol != null && nextSymbol.Type == HtmlSymbolType.Text &&
-                            !string.Equals(nextSymbol.Content, "DOCTYPE", StringComparison.OrdinalIgnoreCase))
+                        // Comment, CDATA, DOCTYPE, or a parser escaped HTML tag.
+                        if (atSpecialTag)
                         {
-                            using (tagBlockWrapper = Context.StartBlock(BlockType.Tag))
-                            {
-                                var complete = StartTag(tags, tagBlockWrapper);
-
-                                // If the tag was completed this will ensure the '>' is contained in the tag block.
-                                Output(SpanKind.Markup);
-
-                                return complete;
-                            }
+                            Accept(_bufferedOpenAngle);
+                            return BangTag();
                         }
-
-                        // Comment
-                        Accept(_bufferedOpenAngle);
-                        return BangTag();
+                        else
+                        {
+                            goto default;
+                        }
                     case HtmlSymbolType.QuestionMark:
                         // XML PI
                         Accept(_bufferedOpenAngle);
@@ -312,7 +305,7 @@ namespace Microsoft.AspNet.Razor.Parser
 
                     if (nextSymbol != null && nextSymbol.Type == HtmlSymbolType.Text)
                     {
-                        tagName = nextSymbol.Content;
+                        tagName = "!" + nextSymbol.Content;
                     }
                 }
                 else if (At(HtmlSymbolType.Text))
@@ -332,6 +325,8 @@ namespace Microsoft.AspNet.Razor.Parser
                 }
                 Accept(_bufferedOpenAngle);
                 Accept(solidus);
+
+                OptionalBangEscape();
 
                 AcceptUntil(HtmlSymbolType.CloseAngle);
 
@@ -380,14 +375,22 @@ namespace Microsoft.AspNet.Razor.Parser
             return seenCloseAngle;
         }
 
-        // Special tags include <! and <? tags
+        // Special tags include <!--, <!DOCTYPE, <![CDATA and <? tags
         private bool AtSpecialTag
         {
             get
             {
-                return (At(HtmlSymbolType.OpenAngle) &&
-                       (NextIs(HtmlSymbolType.Bang) ||
-                        NextIs(HtmlSymbolType.QuestionMark)));
+                if (At(HtmlSymbolType.OpenAngle))
+                {
+                    if (NextIs(HtmlSymbolType.Bang))
+                    {
+                        return !AtBangEscape(lookahead: 1);
+                    }
+
+                    return NextIs(HtmlSymbolType.QuestionMark);
+                }
+
+                return false;
             }
         }
 
@@ -685,7 +688,7 @@ namespace Microsoft.AspNet.Razor.Parser
         private bool StartTag(Stack<Tuple<HtmlSymbol, SourceLocation>> tags, IDisposable tagBlockWrapper)
         {
             // If we're at text, it's the name, otherwise the name is ""
-            HtmlSymbol tagName;
+            HtmlSymbol tagName = null;
             HtmlSymbol bangSymbol = null;
             HtmlSymbol potentialTagNameSymbol;
 
@@ -700,14 +703,21 @@ namespace Microsoft.AspNet.Razor.Parser
                 potentialTagNameSymbol = CurrentSymbol;
             }
 
-            if (potentialTagNameSymbol != null && potentialTagNameSymbol.Type == HtmlSymbolType.Text)
+            if (potentialTagNameSymbol == null || potentialTagNameSymbol.Type != HtmlSymbolType.Text)
+            {
+                tagName = new HtmlSymbol(potentialTagNameSymbol.Start, string.Empty, HtmlSymbolType.Unknown);
+            }
+            else if (bangSymbol != null)
+            {
+                tagName = new HtmlSymbol(bangSymbol.Start, "!" + potentialTagNameSymbol.Content, HtmlSymbolType.Text);
+            }
+            else if (potentialTagNameSymbol.Type == HtmlSymbolType.Text)
             {
                 tagName = potentialTagNameSymbol;
             }
-            else
-            {
-                tagName = new HtmlSymbol(potentialTagNameSymbol.Start, String.Empty, HtmlSymbolType.Unknown);
-            }
+
+            // tagName should never be null here, the above if/else if should take care of all cases.
+            Debug.Assert(tagName != null);
 
             Tuple<HtmlSymbol, SourceLocation> tag = Tuple.Create(tagName, _lastTagStart);
 
@@ -760,7 +770,7 @@ namespace Microsoft.AspNet.Razor.Parser
                 return true;
             }
             Accept(_bufferedOpenAngle);
-            Optional(HtmlSymbolType.Bang);
+            OptionalBangEscape();
             Optional(HtmlSymbolType.Text);
             return RestOfTag(tag, tags, tagBlockWrapper);
         }

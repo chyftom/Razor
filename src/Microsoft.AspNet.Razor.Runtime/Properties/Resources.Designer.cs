@@ -126,6 +126,22 @@ namespace Microsoft.AspNet.Razor.Runtime
             return string.Format(CultureInfo.CurrentCulture, GetString("TagHelperDescriptorResolver_EncounteredUnexpectedError"), p0, p1, p2);
         }
 
+        /// <summary>
+        /// Tag helpers cannot target element name "{0}".
+        /// </summary>
+        internal static string HtmlElementNameAttribute_InvalidElementName
+        {
+            get { return GetString("HtmlElementNameAttribute_InvalidElementName"); }
+        }
+
+        /// <summary>
+        /// Tag helpers cannot target element name "{0}".
+        /// </summary>
+        internal static string FormatHtmlElementNameAttribute_InvalidElementName(object p0)
+        {
+            return string.Format(CultureInfo.CurrentCulture, GetString("HtmlElementNameAttribute_InvalidElementName"), p0);
+        }
+
         private static string GetString(string name, params string[] formatterNames)
         {
             var value = _resourceManager.GetString(name);

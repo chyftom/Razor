@@ -24,8 +24,8 @@ namespace TestOutput
         #pragma warning disable 1998
         public override async Task ExecuteAsync()
         {
-            Instrumentation.BeginContext(27, 74, true);
-            WriteLiteral("\r\n<!div class=\"randomNonTagHelperAttribute\">\r\n    <p class=\"Hello World\" ");
+            Instrumentation.BeginContext(27, 72, true);
+            WriteLiteral("\r\n<div class=\"randomNonTagHelperAttribute\">\r\n    <p class=\"Hello World\" ");
             Instrumentation.EndContext();
             Instrumentation.BeginContext(102, 12, false);
 #line 4 "EscapedTagHelpers.cshtml"
@@ -34,8 +34,8 @@ namespace TestOutput
 #line default
 #line hidden
             Instrumentation.EndContext();
-            Instrumentation.BeginContext(114, 72, true);
-            WriteLiteral(">\r\n        <input type=\"text\" />\r\n        <!em>Not a TagHelper: </!em> ");
+            Instrumentation.BeginContext(114, 69, true);
+            WriteLiteral(">\r\n        <input type=\"text\" />\r\n        <em>Not a TagHelper: </em> ");
             Instrumentation.EndContext();
             __tagHelperExecutionContext = __tagHelperScopeManager.Begin("input", "test", async() => {
             }
@@ -78,8 +78,8 @@ Write(DateTime.Now);
             WriteLiteral(__tagHelperExecutionContext.Output.GeneratePostContent());
             WriteLiteral(__tagHelperExecutionContext.Output.GenerateEndTag());
             __tagHelperExecutionContext = __tagHelperScopeManager.End();
-            Instrumentation.BeginContext(231, 20, true);
-            WriteLiteral("\r\n    </p>\r\n</!div>");
+            Instrumentation.BeginContext(231, 18, true);
+            WriteLiteral("\r\n    </p>\r\n</div>");
             Instrumentation.EndContext();
         }
         #pragma warning restore 1998

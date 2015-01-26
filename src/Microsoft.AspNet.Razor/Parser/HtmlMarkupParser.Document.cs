@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using Microsoft.AspNet.Razor.Generator;
 using Microsoft.AspNet.Razor.Parser.SyntaxTree;
 using Microsoft.AspNet.Razor.Tokenizer.Symbols;
 
@@ -42,20 +43,16 @@ namespace Microsoft.AspNet.Razor.Parser
             {
                 if (NextIs(HtmlSymbolType.Bang))
                 {
-                    var afterBang = Lookahead(count: 2);
-
                     // Checking to see if we meet the conditions of a special '!' tag: <!DOCTYPE, <![CDATA[, <!--.
-                    if (afterBang != null && 
-                        (afterBang.Type != HtmlSymbolType.Text ||
-                        string.Equals(afterBang.Content, "DOCTYPE", StringComparison.OrdinalIgnoreCase)))
+                    if (!AtBangEscape(lookahead: 1))
                     {
                         AcceptAndMoveNext(); // Accept '<'
                         BangTag();
-
                         return;
                     }
 
-                    // We should behave like a normal tag, fall through to the normal tag logic.
+                    // We should behave like a normal tag that has a parser escape, fall through to the normal 
+                    // tag logic.
                 }
                 else if (NextIs(HtmlSymbolType.QuestionMark))
                 {
@@ -73,7 +70,7 @@ namespace Microsoft.AspNet.Razor.Parser
 
                 if (!At(HtmlSymbolType.ForwardSlash))
                 {
-                    Optional(HtmlSymbolType.Bang);
+                    OptionalBangEscape();
 
                     // Parsing a start tag
                     var scriptTag = At(HtmlSymbolType.Text) &&
@@ -97,8 +94,9 @@ namespace Microsoft.AspNet.Razor.Parser
                     // Parsing an end tag
                     // This section can accept things like: '</p  >' or '</p>' etc.
                     Optional(HtmlSymbolType.ForwardSlash);
+
                     // Whitespace here is invalid (according to the spec)
-                    Optional(HtmlSymbolType.Bang);
+                    OptionalBangEscape();
                     Optional(HtmlSymbolType.Text);
                     AcceptAll(HtmlSymbolType.WhiteSpace);
                     Optional(HtmlSymbolType.CloseAngle);
@@ -108,6 +106,39 @@ namespace Microsoft.AspNet.Razor.Parser
 
                 // End tag block
                 tagBlock.Dispose();
+            }
+        }
+
+        private bool AtBangEscape(int lookahead = 0)
+        {
+            var potentialBang = lookahead == 0 ? CurrentSymbol : Lookahead(lookahead);
+
+            if (potentialBang != null &&
+                potentialBang.Type == HtmlSymbolType.Bang)
+            {
+                var afterBang = Lookahead(lookahead + 1);
+
+                return afterBang != null &&
+                    afterBang.Type == HtmlSymbolType.Text &&
+                    !string.Equals(afterBang.Content, "DOCTYPE", StringComparison.OrdinalIgnoreCase);
+            }
+
+            return false;
+        }
+
+        private void OptionalBangEscape()
+        {
+            if (AtBangEscape())
+            {
+                Output(SpanKind.Markup);
+
+                // Accept the parser escape character '!'.
+                Assert(HtmlSymbolType.Bang);
+                AcceptAndMoveNext();
+
+                // Setup the metacode span that we will be outputing.
+                Span.CodeGenerator = SpanCodeGenerator.Null;
+                Output(SpanKind.MetaCode, AcceptedCharacters.None);
             }
         }
     }
