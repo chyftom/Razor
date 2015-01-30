@@ -43,7 +43,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
 
         [Theory]
         [InlineData("MyType, MyAssembly", "MyAssembly")]
-        [InlineData("MyAssembly2", "MyAssembly2")]
+        [InlineData("*, MyAssembly2", "MyAssembly2")]
         public void Resolve_AllowsOverridenResolveDescriptorsInAssembly(string lookupText, string expectedAssemblyName)
         {
             // Arrange
@@ -86,7 +86,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                         },
                         new []
                         {
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper)
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper)
                         },
                         new [] { Valid_PlainTagHelperDescriptor }
                     },
@@ -98,8 +98,8 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                         },
                         new []
                         {
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper),
-                            new TagHelperDirectiveDescriptor(assemblyB, TagHelperDirectiveType.AddTagHelper)
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyB, TagHelperDirectiveType.AddTagHelper)
                         },
                         new [] { Valid_PlainTagHelperDescriptor, stringTagHelperDescriptor }
                     },
@@ -111,8 +111,8 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                         },
                         new []
                         {
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper),
-                            new TagHelperDirectiveDescriptor(assemblyB, TagHelperDirectiveType.RemoveTagHelper)
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyB, TagHelperDirectiveType.RemoveTagHelper)
                         },
                         new [] { Valid_PlainTagHelperDescriptor }
                     },
@@ -124,9 +124,9 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                         },
                         new []
                         {
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper),
-                            new TagHelperDirectiveDescriptor(assemblyB, TagHelperDirectiveType.AddTagHelper),
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.RemoveTagHelper)
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyB, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.RemoveTagHelper)
                         },
                         new [] { stringTagHelperDescriptor }
                     },
@@ -140,7 +140,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                             new TagHelperDirectiveDescriptor(
                                 Valid_PlainTagHelperType.FullName + ", " + assemblyA,
                                 TagHelperDirectiveType.AddTagHelper),
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper)
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper)
                         },
                         new [] { Valid_PlainTagHelperDescriptor, Valid_InheritedTagHelperDescriptor }
                     },
@@ -151,7 +151,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                         },
                         new []
                         {
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
                             new TagHelperDirectiveDescriptor(
                                 Valid_PlainTagHelperType.FullName + ", " + assemblyA,
                                 TagHelperDirectiveType.RemoveTagHelper)
@@ -165,11 +165,11 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                         },
                         new []
                         {
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
                             new TagHelperDirectiveDescriptor(
                                 Valid_PlainTagHelperType.FullName + ", " + assemblyA,
                                 TagHelperDirectiveType.RemoveTagHelper),
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper)
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper)
                         },
                         new [] { Valid_InheritedTagHelperDescriptor, Valid_PlainTagHelperDescriptor }
                     },
@@ -180,11 +180,132 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                         },
                         new []
                         {
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper),
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
                         },
                         new [] { Valid_InheritedTagHelperDescriptor, Valid_PlainTagHelperDescriptor }
-                    }
+                    },
+                    {
+                        new Dictionary<string, IEnumerable<Type>>
+                        {
+                            { assemblyA, new [] { Valid_PlainTagHelperType, Valid_InheritedTagHelperType } },
+                        },
+                        new []
+                        {
+                            new TagHelperDirectiveDescriptor(
+                                Valid_PlainTagHelperType.Namespace + ".Valid_Plain*, " + assemblyA,
+                                TagHelperDirectiveType.AddTagHelper),
+                        },
+                        new [] { Valid_PlainTagHelperDescriptor }
+                    },
+                    {
+                        new Dictionary<string, IEnumerable<Type>>
+                        {
+                            { assemblyA, new [] { Valid_PlainTagHelperType, Valid_InheritedTagHelperType } },
+                        },
+                        new []
+                        {
+                            new TagHelperDirectiveDescriptor(
+                                "*Plain*, " + assemblyA,
+                                TagHelperDirectiveType.AddTagHelper),
+                        },
+                        new [] { Valid_PlainTagHelperDescriptor }
+                    },
+                    {
+                        new Dictionary<string, IEnumerable<Type>>
+                        {
+                            { assemblyA, new [] { Valid_PlainTagHelperType, Valid_InheritedTagHelperType } },
+                        },
+                        new []
+                        {
+                            new TagHelperDirectiveDescriptor(
+                                Valid_PlainTagHelperType.Namespace + "*, " + assemblyA,
+                                TagHelperDirectiveType.AddTagHelper),
+                        },
+                        new [] { Valid_PlainTagHelperDescriptor, Valid_PlainTagHelperDescriptor }
+                    },
+                    {
+                        new Dictionary<string, IEnumerable<Type>>
+                        {
+                            { assemblyA, new [] { Valid_PlainTagHelperType, Valid_InheritedTagHelperType } },
+                        },
+                        new []
+                        {
+                            new TagHelperDirectiveDescriptor(
+                                "*_*lain*, " + assemblyA,
+                                TagHelperDirectiveType.AddTagHelper),
+                        },
+                        new [] { Valid_PlainTagHelperDescriptor }
+                    },
+                    {
+                        new Dictionary<string, IEnumerable<Type>>
+                        {
+                            { assemblyA, new [] { Valid_PlainTagHelperType, Valid_InheritedTagHelperType } },
+                        },
+                        new []
+                        {
+                            new TagHelperDirectiveDescriptor(
+                                "*" + Valid_PlainTagHelperType.FullName + "*, " + assemblyA,
+                                TagHelperDirectiveType.AddTagHelper),
+                        },
+                        new [] { Valid_PlainTagHelperDescriptor }
+                    },
+                    {
+                        new Dictionary<string, IEnumerable<Type>>
+                        {
+                            { assemblyA, new [] { Valid_PlainTagHelperType, Valid_InheritedTagHelperType } }
+                        },
+                        new []
+                        {
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor(
+                                "*_*la*, " + assemblyA,
+                                TagHelperDirectiveType.RemoveTagHelper)
+                        },
+                        new [] { Valid_InheritedTagHelperDescriptor }
+                    },
+                    {
+                        new Dictionary<string, IEnumerable<Type>>
+                        {
+                            { assemblyA, new [] { Valid_PlainTagHelperType, Valid_InheritedTagHelperType } },
+                        },
+                        new []
+                        {
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor(
+                                "*Plain*, " + assemblyA,
+                                TagHelperDirectiveType.RemoveTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper)
+                        },
+                        new [] { Valid_InheritedTagHelperDescriptor, Valid_PlainTagHelperDescriptor }
+                    },
+                    {
+                        new Dictionary<string, IEnumerable<Type>>
+                        {
+                            { assemblyA, new [] { Valid_PlainTagHelperType } },
+                            { assemblyB, new [] { stringType } }
+                        },
+                        new []
+                        {
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*ring, " + assemblyB, TagHelperDirectiveType.RemoveTagHelper)
+                        },
+                        new [] { Valid_PlainTagHelperDescriptor }
+                    },
+                    {
+                        new Dictionary<string, IEnumerable<Type>>
+                        {
+                            { assemblyA, new [] { Valid_PlainTagHelperType, Valid_InheritedTagHelperType } },
+                            { assemblyB, new [] { stringType } }
+                        },
+                        new []
+                        {
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyB, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("Microsoft.*, " + assemblyA, TagHelperDirectiveType.RemoveTagHelper)
+                        },
+                        new [] { stringTagHelperDescriptor }
+                    },
                 };
             }
         }
@@ -239,8 +360,8 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                         },
                         new []
                         {
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper),
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.RemoveTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.RemoveTagHelper),
                         }
                     },
                     {
@@ -250,7 +371,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                         },
                         new []
                         {
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
                             new TagHelperDirectiveDescriptor(Valid_PlainTagHelperType.FullName + ", " + assemblyA, TagHelperDirectiveType.RemoveTagHelper),
                             new TagHelperDirectiveDescriptor(Valid_InheritedTagHelperType.FullName + ", " + assemblyA, TagHelperDirectiveType.RemoveTagHelper)
                         }
@@ -263,10 +384,10 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                         },
                         new []
                         {
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper),
-                            new TagHelperDirectiveDescriptor(assemblyB, TagHelperDirectiveType.AddTagHelper),
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.RemoveTagHelper),
-                            new TagHelperDirectiveDescriptor(assemblyB, TagHelperDirectiveType.RemoveTagHelper)
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyB, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.RemoveTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyB, TagHelperDirectiveType.RemoveTagHelper)
                         }
                     },
                     {
@@ -277,8 +398,8 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                         },
                         new []
                         {
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.AddTagHelper),
-                            new TagHelperDirectiveDescriptor(assemblyB, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyB, TagHelperDirectiveType.AddTagHelper),
                             new TagHelperDirectiveDescriptor(Valid_PlainTagHelperType.FullName + ", " + assemblyA, TagHelperDirectiveType.RemoveTagHelper),
                             new TagHelperDirectiveDescriptor(Valid_InheritedTagHelperType.FullName + ", " + assemblyA, TagHelperDirectiveType.RemoveTagHelper),
                             new TagHelperDirectiveDescriptor(stringType.FullName + ", " + assemblyB, TagHelperDirectiveType.RemoveTagHelper)
@@ -288,8 +409,45 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                         new Dictionary<string, IEnumerable<Type>>(),
                         new []
                         {
-                            new TagHelperDirectiveDescriptor(assemblyA, TagHelperDirectiveType.RemoveTagHelper),
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.RemoveTagHelper),
                             new TagHelperDirectiveDescriptor(Valid_PlainTagHelperType.FullName + ", " + assemblyA, TagHelperDirectiveType.RemoveTagHelper),
+                        }
+                    },
+                    {
+                        new Dictionary<string, IEnumerable<Type>>
+                        {
+                            { assemblyA, new [] { Valid_PlainTagHelperType } },
+                        },
+                        new []
+                        {
+                            new TagHelperDirectiveDescriptor("*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*TagHelper, " + assemblyA, TagHelperDirectiveType.RemoveTagHelper),
+                        }
+                    },
+                    {
+                        new Dictionary<string, IEnumerable<Type>>
+                        {
+                            { assemblyA, new [] { Valid_PlainTagHelperType, Valid_InheritedTagHelperType } },
+                        },
+                        new []
+                        {
+                            new TagHelperDirectiveDescriptor("*_*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*Plain*, " + assemblyA, TagHelperDirectiveType.RemoveTagHelper),
+                            new TagHelperDirectiveDescriptor("*_*Inhe*ed*, " + assemblyA, TagHelperDirectiveType.RemoveTagHelper)
+                        }
+                    },
+                    {
+                        new Dictionary<string, IEnumerable<Type>>
+                        {
+                            { assemblyA, new [] { Valid_PlainTagHelperType, Valid_InheritedTagHelperType } },
+                            { assemblyB, new [] { stringType } },
+                        },
+                        new []
+                        {
+                            new TagHelperDirectiveDescriptor("Microsoft.*, " + assemblyA, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("System.*, " + assemblyB, TagHelperDirectiveType.AddTagHelper),
+                            new TagHelperDirectiveDescriptor("*Helper, " + assemblyA, TagHelperDirectiveType.RemoveTagHelper),
+                            new TagHelperDirectiveDescriptor("System.*, " + assemblyB, TagHelperDirectiveType.RemoveTagHelper)
                         }
                     }
                 };
@@ -408,7 +566,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             };
 
             // Act
-            var descriptors = resolver.Resolve(AssemblyName).ToArray();
+            var descriptors = resolver.Resolve("*, " + AssemblyName).ToArray();
 
             // Assert
             Assert.Equal(descriptors.Length, 2);
@@ -431,7 +589,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                     }));
 
             // Act
-            var descriptors = resolver.Resolve("lookupText").ToArray();
+            var descriptors = resolver.Resolve("*, lookupText").ToArray();
 
             // Assert
             Assert.Empty(descriptors);
@@ -440,7 +598,13 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         [Theory]
         [InlineData("")]
         [InlineData(null)]
-        public void DescriptorResolver_CreatesErrorIfNullOrEmptyLookupText_DoesNotThrow(string lookupText)
+        [InlineData("*,")]
+        [InlineData(",")]
+        [InlineData(",,,")]
+        [InlineData("SomeType,")]
+        [InlineData("SomeAssembly")]
+        [InlineData("First,Second,Third")]
+        public void DescriptorResolver_CreatesErrorIfInvalidLookupText_DoesNotThrow(string lookupText)
         {
             // Arrange
             var errorSink = new ParserErrorSink();
@@ -449,8 +613,10 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                     new TestTagHelperTypeResolver(InvalidTestableTagHelpers));
             var documentLocation = new SourceLocation(1, 2, 3);
             var directiveType = TagHelperDirectiveType.AddTagHelper;
-            var expectedErrorMessage =
-                Resources.FormatTagHelperDescriptorResolver_InvalidTagHelperLookupText(lookupText);
+            var expectedErrorMessage = string.Format(
+                "Invalid tag helper directive look up text '{0}'. The correct look up text " +
+                "format is: \"typeName, assemblyName\".",
+                lookupText);
             var resolutionContext = new TagHelperDescriptorResolutionContext(
                 new [] { new TagHelperDirectiveDescriptor(lookupText, documentLocation, directiveType)},
                 errorSink);
@@ -470,7 +636,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         {
             // Arrange
             var expectedErrorMessage = "Encountered an unexpected error when attempting to resolve tag helper " +
-                                       "directive '@addtaghelper' with value 'A custom lookup text'. Error: A " +
+                                       "directive '@addtaghelper' with value 'A custom, lookup text'. Error: A " +
                                        "custom exception";
             var documentLocation = new SourceLocation(1, 2, 3);
             var directiveType = TagHelperDirectiveType.AddTagHelper;
@@ -478,7 +644,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             var expectedError = new Exception("A custom exception");
             var tagHelperDescriptorResolver = new ThrowingTagHelperDescriptorResolver(expectedError);
             var resolutionContext = new TagHelperDescriptorResolutionContext(
-                new[] { new TagHelperDirectiveDescriptor("A custom lookup text", documentLocation, directiveType) },
+                new[] { new TagHelperDirectiveDescriptor("A custom, lookup text", documentLocation, directiveType) },
                 errorSink);
 
 
