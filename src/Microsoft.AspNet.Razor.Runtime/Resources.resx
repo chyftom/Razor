@@ -131,8 +131,8 @@
   <data name="ScopeManager_EndCannotBeCalledWithoutACallToBegin" xml:space="preserve">
     <value>Must call '{2}.{1}' before calling '{2}.{0}'.</value>
   </data>
-  <data name="HtmlElementNameAttribute_AdditionalTagsCannotContainNull" xml:space="preserve">
-    <value>Parameter {0} must not contain null tag names.</value>
+  <data name="HtmlElementNameAttribute_ElementNameCannotBeNullOrWhitespace" xml:space="preserve">
+    <value>Tag name cannot be null or whitespace.</value>
   </data>
   <data name="ArgumentCannotBeNullOrEmpty" xml:space="preserve">
     <value>The value cannot be null or empty.</value>
@@ -141,6 +141,6 @@
     <value>Encountered an unexpected error when attempting to resolve tag helper directive '{0}' with value '{1}'. Error: {2}</value>
   </data>
   <data name="HtmlElementNameAttribute_InvalidElementName" xml:space="preserve">
-    <value>Tag helpers cannot target element name "{0}".</value>
+    <value>Tag helpers cannot target element name '{0}' because it contains a '{1}' character.</value>
   </data>
 </root>

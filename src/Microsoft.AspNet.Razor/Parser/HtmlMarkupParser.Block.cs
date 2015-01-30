@@ -200,7 +200,7 @@ namespace Microsoft.AspNet.Razor.Parser
                         // End Tag
                         return EndTag(tagStart, tags, tagBlockWrapper);
                     case HtmlSymbolType.Bang:
-                        // Comment, CDATA, DOCTYPE, or a parser escaped HTML tag.
+                        // Comment, CDATA, DOCTYPE, or a parser-escaped HTML tag.
                         if (atSpecialTag)
                         {
                             Accept(_bufferedOpenAngle);
@@ -285,11 +285,11 @@ namespace Microsoft.AspNet.Razor.Parser
         {
             // Accept "/" and move next
             Assert(HtmlSymbolType.ForwardSlash);
-            var solidus = CurrentSymbol;
+            var forwardSlash = CurrentSymbol;
             if (!NextToken())
             {
                 Accept(_bufferedOpenAngle);
-                Accept(solidus);
+                Accept(forwardSlash);
                 return false;
             }
             else
@@ -317,14 +317,13 @@ namespace Microsoft.AspNet.Razor.Parser
 
                 if (tags.Count == 0 &&
                     // Text tags cannot be targeted by TagHelpers and therefore can't be escaped with '!'.
-                    bangSymbol == null &&
                     string.Equals(tagName, SyntaxConstants.TextTagName, StringComparison.OrdinalIgnoreCase) &&
                     matched)
                 {
-                    return EndTextTag(solidus, tagBlockWrapper);
+                    return EndTextTag(forwardSlash, tagBlockWrapper);
                 }
                 Accept(_bufferedOpenAngle);
-                Accept(solidus);
+                Accept(forwardSlash);
 
                 OptionalBangEscape();
 
@@ -687,8 +686,7 @@ namespace Microsoft.AspNet.Razor.Parser
 
         private bool StartTag(Stack<Tuple<HtmlSymbol, SourceLocation>> tags, IDisposable tagBlockWrapper)
         {
-            // If we're at text, it's the name, otherwise the name is ""
-            HtmlSymbol tagName = null;
+            HtmlSymbol tagName;
             HtmlSymbol bangSymbol = null;
             HtmlSymbol potentialTagNameSymbol;
 
@@ -711,19 +709,15 @@ namespace Microsoft.AspNet.Razor.Parser
             {
                 tagName = new HtmlSymbol(bangSymbol.Start, "!" + potentialTagNameSymbol.Content, HtmlSymbolType.Text);
             }
-            else if (potentialTagNameSymbol.Type == HtmlSymbolType.Text)
+            else
             {
                 tagName = potentialTagNameSymbol;
             }
-
-            // tagName should never be null here, the above if/else if should take care of all cases.
-            Debug.Assert(tagName != null);
 
             Tuple<HtmlSymbol, SourceLocation> tag = Tuple.Create(tagName, _lastTagStart);
 
             if (tags.Count == 0 &&
                 // Text tags cannot be targeted by TagHelpers and therefore can't be escaped with '!'.
-                bangSymbol == null &&
                 string.Equals(tag.Item1.Content, SyntaxConstants.TextTagName, StringComparison.OrdinalIgnoreCase))
             {
                 Output(SpanKind.Markup);

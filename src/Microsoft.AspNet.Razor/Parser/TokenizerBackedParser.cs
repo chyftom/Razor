@@ -78,7 +78,7 @@ namespace Microsoft.AspNet.Razor.Parser
 
         protected TSymbol Lookahead(int count = 1)
         {
-            if (count == 0)
+            if (count <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(count));
             }
@@ -90,13 +90,13 @@ namespace Microsoft.AspNet.Razor.Parser
             symbols[0] = currentSymbol;
 
             // We need to lookforward "count" many times.
-            for(var i = 1; i <= count; i++)
+            for (var i = 1; i <= count; i++)
             {
                 NextToken();
                 symbols[i] = CurrentSymbol;
             }
 
-            // We don't want to modify where the Tokenizer is pointing. Restore it to what it was before the lookahead.
+            // Restore Tokenizer's location to where it was pointing before the look-ahead.
             for (var i = count; i >= 0; i--)
             {
                 PutBack(symbols[i]);

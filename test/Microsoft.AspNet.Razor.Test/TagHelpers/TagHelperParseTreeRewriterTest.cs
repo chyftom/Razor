@@ -19,7 +19,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
 {
     public class TagHelperParseTreeRewriterTest : CsHtmlMarkupParserTestBase
     {
-        public static TheoryData OptOutPartialTagDataCSharp
+        public static TheoryData OptOut_WithPartialData_CSharp
         {
             get
             {
@@ -73,6 +73,20 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                 absoluteIndex: 1, lineIndex: 0, columnIndex: 1),
                             new RazorError(
                                 string.Format(errorEOFMatchingBrace, "!p}"),
+                                absoluteIndex: 2, lineIndex: 0, columnIndex: 2)
+                        }
+                    },
+                    {
+                        "@{<!p /}",
+                        buildPartialStatementBlock(
+                            () => new MarkupBlock(blockFactory.EscapedMarkupTagBlock("<", "p /}"))),
+                        new []
+                        {
+                            new RazorError(
+                                errorMatchingBrace,
+                                absoluteIndex: 1, lineIndex: 0, columnIndex: 1),
+                            new RazorError(
+                                string.Format(errorEOFMatchingBrace, "!p"),
                                 absoluteIndex: 2, lineIndex: 0, columnIndex: 2)
                         }
                     },
@@ -162,13 +176,44 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
                                         string.Format(errorEOFMatchingBrace, "!p"),
                                         absoluteIndex: 2, lineIndex: 0, columnIndex: 2)
                                 }
+                    },
+                    {
+                        "@{<!p class=\"btn\" /}",
+                        buildPartialStatementBlock(
+                            () => new MarkupBlock(
+                                new MarkupTagBlock(
+                                    factory.Markup("<"),
+                                    factory.BangEscape(),
+                                    factory.Markup("p"),
+
+                                    new MarkupBlock(
+                                        new AttributeBlockCodeGenerator(
+                                            name: "class",
+                                            prefix: new LocationTagged<string>(" class=\"", 5, 0, 5),
+                                            suffix: new LocationTagged<string>("\"", 16, 0, 16)),
+                                        factory.Markup(" class=\"").With(SpanCodeGenerator.Null),
+                                        factory.Markup("btn").With(
+                                            new LiteralAttributeCodeGenerator(
+                                                prefix: new LocationTagged<string>(string.Empty, 13, 0, 13),
+                                                value: new LocationTagged<string>("btn", 13, 0, 13))),
+                                        factory.Markup("\"").With(SpanCodeGenerator.Null)),
+                                    factory.Markup(" /}")))),
+                                new []
+                                {
+                                    new RazorError(
+                                        errorMatchingBrace,
+                                        absoluteIndex: 1, lineIndex: 0, columnIndex: 1),
+                                    new RazorError(
+                                        string.Format(errorEOFMatchingBrace, "!p"),
+                                        absoluteIndex: 2, lineIndex: 0, columnIndex: 2)
+                                }
                     }
                 };
             }
         }
 
         [Theory]
-        [MemberData(nameof(OptOutPartialTagDataCSharp))]
+        [MemberData(nameof(OptOut_WithPartialData_CSharp))]
         public void Rewrite_AllowsTagHelperElementOptForIncompleteHTMLInCSharpBlock(
             string documentContent,
             MarkupBlock expectedOutput,
@@ -177,7 +222,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
             RunParseTreeRewriterTest(documentContent, expectedOutput, expectedErrors, "strong", "p");
         }
 
-        public static TheoryData OptOutPartialTagDataHTML
+        public static TheoryData OptOut_WithPartialData_HTML
         {
             get
             {
@@ -251,7 +296,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
         }
 
         [Theory]
-        [MemberData(nameof(OptOutPartialTagDataHTML))]
+        [MemberData(nameof(OptOut_WithPartialData_HTML))]
         public void Rewrite_AllowsTagHelperElementOptForIncompleteHTML(
             string documentContent,
             MarkupBlock expectedOutput)
@@ -259,7 +304,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
             RunParseTreeRewriterTest(documentContent, expectedOutput, new RazorError[0], "strong", "p");
         }
 
-        public static TheoryData OptOutBlockDataCSharp
+        public static TheoryData OptOut_WithBlockData_CSharp
         {
             get
             {
@@ -487,7 +532,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
             }
         }
 
-        public static TheoryData OptOutAttributeDataCSharp
+        public static TheoryData OptOut_WithAttributeData_CSharp
         {
             get
             {
@@ -611,8 +656,8 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
         }
 
         [Theory]
-        [MemberData(nameof(OptOutBlockDataCSharp))]
-        [MemberData(nameof(OptOutAttributeDataCSharp))]
+        [MemberData(nameof(OptOut_WithBlockData_CSharp))]
+        [MemberData(nameof(OptOut_WithAttributeData_CSharp))]
         public void Rewrite_AllowsTagHelperElementOptOutCSharp(
             string documentContent,
             MarkupBlock expectedOutput,
@@ -621,7 +666,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
             RunParseTreeRewriterTest(documentContent, expectedOutput, expectedErrors, "strong", "p");
         }
 
-        public static TheoryData OptOutBlockDataHTML
+        public static TheoryData OptOut_WithBlockData_HTML
         {
             get
             {
@@ -727,7 +772,7 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
             }
         }
 
-        public static TheoryData OptOutAttributeDataHTML
+        public static TheoryData OptOut_WithAttributeData_HTML
         {
             get
             {
@@ -835,8 +880,8 @@ namespace Microsoft.AspNet.Razor.Test.TagHelpers
         }
 
         [Theory]
-        [MemberData(nameof(OptOutBlockDataHTML))]
-        [MemberData(nameof(OptOutAttributeDataHTML))]
+        [MemberData(nameof(OptOut_WithBlockData_HTML))]
+        [MemberData(nameof(OptOut_WithAttributeData_HTML))]
         public void Rewrite_AllowsTagHelperElementOptOutHTML(
             string documentContent,
             MarkupBlock expectedOutput,

@@ -79,19 +79,19 @@ namespace Microsoft.AspNet.Razor.Runtime
         }
 
         /// <summary>
-        /// Parameter {0} must not contain null tag names.
+        /// Tag name cannot be null or whitespace.
         /// </summary>
-        internal static string HtmlElementNameAttribute_AdditionalTagsCannotContainNull
+        internal static string HtmlElementNameAttribute_ElementNameCannotBeNullOrWhitespace
         {
-            get { return GetString("HtmlElementNameAttribute_AdditionalTagsCannotContainNull"); }
+            get { return GetString("HtmlElementNameAttribute_ElementNameCannotBeNullOrWhitespace"); }
         }
 
         /// <summary>
-        /// Parameter {0} must not contain null tag names.
+        /// Tag name cannot be null or whitespace.
         /// </summary>
-        internal static string FormatHtmlElementNameAttribute_AdditionalTagsCannotContainNull(object p0)
+        internal static string FormatHtmlElementNameAttribute_ElementNameCannotBeNullOrWhitespace()
         {
-            return string.Format(CultureInfo.CurrentCulture, GetString("HtmlElementNameAttribute_AdditionalTagsCannotContainNull"), p0);
+            return GetString("HtmlElementNameAttribute_ElementNameCannotBeNullOrWhitespace");
         }
 
         /// <summary>
@@ -127,7 +127,7 @@ namespace Microsoft.AspNet.Razor.Runtime
         }
 
         /// <summary>
-        /// Tag helpers cannot target element name "{0}".
+        /// Tag helpers cannot target element name '{0}' because it contains a '{1}' character.
         /// </summary>
         internal static string HtmlElementNameAttribute_InvalidElementName
         {
@@ -135,11 +135,11 @@ namespace Microsoft.AspNet.Razor.Runtime
         }
 
         /// <summary>
-        /// Tag helpers cannot target element name "{0}".
+        /// Tag helpers cannot target element name '{0}' because it contains a '{1}' character.
         /// </summary>
-        internal static string FormatHtmlElementNameAttribute_InvalidElementName(object p0)
+        internal static string FormatHtmlElementNameAttribute_InvalidElementName(object p0, object p1)
         {
-            return string.Format(CultureInfo.CurrentCulture, GetString("HtmlElementNameAttribute_InvalidElementName"), p0);
+            return string.Format(CultureInfo.CurrentCulture, GetString("HtmlElementNameAttribute_InvalidElementName"), p0, p1);
         }
 
         private static string GetString(string name, params string[] formatterNames)
