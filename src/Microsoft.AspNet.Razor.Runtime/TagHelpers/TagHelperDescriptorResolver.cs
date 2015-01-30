@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.AspNet.Razor.Parser;
 using Microsoft.AspNet.Razor.TagHelpers;
 using Microsoft.AspNet.Razor.Text;
@@ -113,8 +114,17 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                 return false;
             }
 
-            return string.IsNullOrEmpty(lookupInfo.TypeName) ||
-              string.Equals(descriptor.TypeName, lookupInfo.TypeName, StringComparison.Ordinal);
+            // We need to escape the typeMatcher so we can choose to only allow specific regex.
+            var escapedTypeMatcher = Regex.Escape(lookupInfo.TypeMatcher);
+
+            // We surround the escapedTypeMatcher with ^ and $ in order ot ensure a regex match matches the entire 
+            // string. We also replace any '*' characters with regex to match any content.
+            var strRegexMatcher = "^" + escapedTypeMatcher.Replace(@"\*", ".*?") + "$";
+
+            // We allow '*' in the output so we need to replace its escaped counterpart with valid regex.
+            var regexMatcher = new Regex(strRegexMatcher, RegexOptions.Singleline);
+
+            return regexMatcher.IsMatch(descriptor.TypeName);
         }
 
         private static LookupInfo GetLookupInfo(TagHelperDirectiveDescriptor directiveDescriptor,
@@ -128,7 +138,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             // "typeName, assemblyName"
             if (lookupStrings == null ||
                 lookupStrings.Any(string.IsNullOrWhiteSpace) ||
-                (lookupStrings.Length != 1 && lookupStrings.Length != 2))
+                lookupStrings.Length != 2)
             {
                 errorSink.OnError(
                     directiveDescriptor.Location,
@@ -137,22 +147,10 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                 return null;
             }
 
-            // Grab the assembly name from the lookup text strings. Due to our supported lookupText formats it will
-            // always be the last element provided.
-            var assemblyName = lookupStrings.Last().Trim();
-            string typeName = null;
-
-            // Check if the lookupText specifies a type to search for.
-            if (lookupStrings.Length == 2)
-            {
-                // The user provided a type name. Retrieve it so we can prune our descriptors.
-                typeName = lookupStrings[0].Trim();
-            }
-
             return new LookupInfo
             {
-                AssemblyName = assemblyName,
-                TypeName = typeName
+                TypeMatcher = lookupStrings[0].Trim(),
+                AssemblyName = lookupStrings[1].Trim()
             };
         }
 
@@ -160,7 +158,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         {
             public string AssemblyName { get; set; }
 
-            public string TypeName { get; set; }
+            public string TypeMatcher { get; set; }
         }
     }
 }
