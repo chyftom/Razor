@@ -107,6 +107,11 @@ namespace Microsoft.AspNet.Razor.Parser.TagHelpers.Internal
 
                 if (afterEquals)
                 {
+                    // We've captured all leading whitespace, the attribute name, and an equals with an optional 
+                    // quote/double quote. We're now at: " asp-for='|...'" or " asp-for=|..."
+                    // The goal here is to capture all symbols until the end of the attribute. Note this will not 
+                    // consume an ending quote due to the symbolOffset.
+
                     // When symbols are accepted into SpanBuilders, their locations get altered to be offset by the 
                     // parent which is why we need to mark our start location prior to adding the symbol. 
                     // This is needed to know the location of the attribute value start within the document.
@@ -121,11 +126,19 @@ namespace Microsoft.AspNet.Razor.Parser.TagHelpers.Internal
                 }
                 else if (name == null && symbol.Type == HtmlSymbolType.Text)
                 {
+                    // We've captured all leading whitespace prior to the attribute name.
+                    // We're now at: " |asp-for='...'" or " |asp-for=..."
+                    // The goal here is to capture the attribute name.
+
                     name = symbol.Content;
                     attributeValueStartLocation = SourceLocation.Advance(attributeValueStartLocation, name);
                 }
                 else if (symbol.Type == HtmlSymbolType.Equals)
                 {
+                    // We've captured all leading whitespace and the attribute name.
+                    // We're now at: " asp-for|='...'" or " asp-for|=..."
+                    // The goal here is to consume the equal sign and the optional single/double-quote.
+
                     // We've found an '=' symbol, this means that the coming symbols will either be a quote
                     // or value (in the case that the value is unquoted).
                     // Spaces after/before the equal symbol are not yet supported:
@@ -137,7 +150,7 @@ namespace Microsoft.AspNet.Razor.Parser.TagHelpers.Internal
                     SourceLocation symbolStartLocation;
 
                     // Check for attribute start values, aka single or double quote
-                    if (i + 1 < htmlSymbols.Length && IsQuote(htmlSymbols[i + 1]))
+                    if ((i + 1) < htmlSymbols.Length && IsQuote(htmlSymbols[i + 1]))
                     {
                         // Move past the attribute start so we can accept the true value.
                         i++;
@@ -149,9 +162,6 @@ namespace Microsoft.AspNet.Razor.Parser.TagHelpers.Internal
                     else
                     {
                         symbolStartLocation = symbol.Start;
-
-                        // Set the symbol offset to 0 so we don't attempt to skip an end quote that doesn't exist.
-                        symbolOffset = 0;
                     }
 
                     attributeValueStartLocation = 
@@ -163,6 +173,12 @@ namespace Microsoft.AspNet.Razor.Parser.TagHelpers.Internal
                 }
                 else if (symbol.Type == HtmlSymbolType.WhiteSpace)
                 {
+                    // We're at the start of the attribute, this branch will always be hit on the first iterations of 
+                    // the loop. We're at: "| asp-for='...'" or "| asp-for=..."
+                    // Note: This will not be hit even for situations like asp-for  ="..." because the core Razor 
+                    // parser currently does not know how to handle attributes in that format. This will be addressed
+                    // by https://github.com/aspnet/Razor/issues/123.
+
                     attributeValueStartLocation = SourceLocation.Advance(attributeValueStartLocation, symbol.Content);
                 }
             }
